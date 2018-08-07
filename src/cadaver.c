@@ -433,24 +433,57 @@ static void set_proxy(const char *str)
     set_option(opt_proxy_port, pnt);
 }
 
+/* Sets username/password */
+static void set_user_pass(char *arg) {
+    char *username, *password;
+    username = arg;
+    password = strrchr(username, ':');
+
+    server_username = strdup(username);
+
+    if(password) {
+        server_username[password - username] = '\0';
+        ++password;
+    } else {
+        password = "";
+    }
+
+    server_password = strdup(password);
+
+    if(password) {
+        int i = 0;
+        while(password[i]) {
+            password[i] = (i == 3 ? '\0' : '*');
+            ++i;
+        }
+    }
+
+    if(username) {
+        while(*username && *username != ':')
+            *username++ = '*';
+    }
+}
+
 static void parse_args(int argc, char **argv)
 {
     static const struct option opts[] = {
 	{ "version", no_argument, NULL, 'V' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "proxy", required_argument, NULL, 'p' },
+	{ "username", required_argument, NULL, 'u' },
 	{ "tolerant", no_argument, NULL, 't' },
 	{ "rcfile", required_argument, NULL, 'r' },
 	{ 0, 0, 0, 0 }
     };
     int optc;
-    while ((optc = getopt_long(argc, argv, "ehtp:r:V", opts, NULL)) != -1) {
+    while ((optc = getopt_long(argc, argv, "ehtp:u:r:V", opts, NULL)) != -1) {
 	switch (optc) {
 	case 'h': usage(); exit(-1);
 	case 'V': execute_about(); exit(-1);
 	case 'p': set_proxy(optarg); break;
 	case 't': tolerant = 1; break;
 	case 'r': rcfile = strdup(optarg); break;
+	case 'u': set_user_pass(optarg); break;
 	case '?': 
 	default:
 	    printf(_("Try `%s --help' for more information.\n"), progname);
@@ -856,7 +889,7 @@ int main(int argc, char *argv[])
     progname = argv[0];
 
 #ifdef ENABLE_NLS
-#ifdef HAVE_SETLOCALE
+#if defined(HAVE_LOCALE_H) && defined(HAVE_SETLOCALE)
     setlocale(LC_ALL, "");
 #endif
 
