@@ -855,11 +855,11 @@ int main(int argc, char *argv[])
 
     progname = argv[0];
 
+#ifdef ENABLE_NLS
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
 #endif
 
-#ifdef ENABLE_NLS
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
     textdomain(PACKAGE_NAME);
 #endif /* ENABLE_NLS */
